@@ -1,0 +1,11 @@
+(async()=>{
+  const os=/Mac/i.test(navigator.platform)?'mac':/Win/i.test(navigator.platform)?'windows':/Linux/i.test(navigator.platform)?'linux':null;
+  if(os){const card=document.querySelector(`[data-os="${os}"]`);card.classList.add('recommend');const label=document.createElement('span');label.className='badge';label.textContent='Ваша система';card.querySelector('h3').after(label);}
+  const fallback=()=>{document.getElementById('version').textContent='Сборки пока недоступны';for(const name of ['mac','windows','linux']){const p=document.createElement('p');p.className='unavailable';p.textContent='Установщик появится здесь после проверки.';document.getElementById(`${name}-links`).replaceChildren(p);}};
+  try{const response=await fetch('releases.json',{cache:'no-cache'});if(!response.ok)throw Error();const data=await response.json();if(!data.files?.length)throw Error();document.getElementById('version').textContent=`Версия ${data.version} · для сотрудников`;
+    const safe=url=>{const u=new URL(url);if(u.origin!=='https://github.com'||!u.pathname.startsWith('/graz1p777dev/cando-os-downloads/releases/download/'))throw Error();return u.href;};
+    for(const name of ['mac','windows','linux']){const box=document.getElementById(`${name}-links`);for(const file of data.files.filter(f=>f.os===name)){const a=document.createElement('a');a.href=safe(file.url);a.textContent=file.label;const size=document.createElement('small');size.textContent=`${Math.round(file.bytes/1048576)} МБ ↓`;a.append(size);box.append(a);}if(!box.children.length)box.textContent='Сборка этой системы пока недоступна';}
+    if(data.checksums){const a=document.getElementById('checksums');a.href=safe(data.checksums);a.hidden=false;}
+    document.getElementById('signing').textContent='Этот выпуск не подписан сертификатом разработчика и предназначен для сотрудников. macOS и Windows могут показать предупреждение. На Mac после переноса в «Программы» используйте «Системные настройки → Конфиденциальность и безопасность → Всё равно открыть», если такая возможность разрешена политикой компьютера. На Windows проверяйте имя и источник установщика. Если установка запрещена, используйте веб-версию; не отключайте защиту системы.';
+  }catch{fallback();}
+})();
